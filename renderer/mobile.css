@@ -1,0 +1,131 @@
+/* =====================================================================
+   Casa 3D no iPhone: o mesmo app, com barra de abas embaixo e painéis em folha
+   (carregado só quando o app é aberto pelo navegador do celular)
+   ===================================================================== */
+html.web { --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px); --tabbar: 56px; -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+html.web, html.web body { height: 100%; overscroll-behavior: none; }
+html.web body { font-size: 15px; }
+html.web input, html.web select, html.web textarea { font-size: 16px; } /* evita o zoom automático do iOS */
+
+html.web #app { grid-template-columns: 1fr; grid-template-rows: 1fr auto; height: 100dvh; }
+html.web .titlebar { display: none; }
+html.web main { grid-row: 1; grid-column: 1; }
+
+/* ---------- barra de abas (estilo iOS) ---------- */
+html.web .rail {
+  grid-row: 2; grid-column: 1; flex-direction: row; justify-content: space-around; align-items: stretch;
+  margin: 0; padding: 4px 6px calc(var(--safe-b) + 2px); height: auto; gap: 0;
+  border-right: 0; border-top: 0.5px solid var(--sep2); background: var(--sidebar); backdrop-filter: saturate(180%) blur(30px); z-index: 20;
+}
+html.web .rail .rail-h, html.web .rail-spacer, html.web .rail [data-view="plan"], html.web .rail [data-view="settings"] { display: none; }
+html.web .rail button {
+  flex: 1; height: 50px; width: auto; flex-direction: column; justify-content: center; gap: 3px; padding: 0;
+  font-size: 10.5px; font-weight: 500; color: var(--tx3); border-radius: 10px; background: none !important;
+}
+html.web .rail button span { display: block !important; }
+html.web .rail button .ic { width: 25px; height: 25px; color: var(--tx3); stroke-width: 1.7; }
+html.web .rail button.active, html.web .rail button.active .ic { color: var(--accent); }
+
+/* ---------- tela Casa ---------- */
+html.web .hud { left: 12px; right: 12px; top: calc(var(--safe-t) + 10px); gap: 8px; }
+html.web .hud-card { min-width: 0; flex: 1; padding: 8px 12px 9px; border-radius: 14px; }
+html.web .hud-card .k { font-size: 12px; }
+html.web .hud-card .v { font-size: 21px; }
+html.web .hud-card .v small { font-size: 11.5px; }
+html.web .hud-greet { display: none; }
+html.web .hud-card:nth-child(n+3) { display: block; }
+html.web .scene-tools { right: 12px; top: calc(var(--safe-t) + 78px); flex-direction: column; gap: 8px; }
+html.web .scene-tools .label-mode span { display: none; }
+html.web .scene-tools .label-mode, html.web .scene-tools .icon-btn { width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 12px; }
+html.web .room-strip { left: 0; right: 0; bottom: 10px; padding: 4px 12px 6px; scrollbar-width: none; }
+html.web .room-strip::-webkit-scrollbar { display: none; }
+html.web .empty-house [data-goto="plan"] { display: none; }
+html.web .dev-pin { height: 34px; font-size: 13px; }
+html.web .dev-pin.compact { width: 32px; height: 32px; }
+
+/* ---------- páginas ---------- */
+html.web .view { -webkit-overflow-scrolling: touch; }
+html.web .page { padding: calc(var(--safe-t) + 14px) 16px 28px; }
+html.web .page h1 { font-size: 30px; }
+html.web .page .sub { margin-bottom: 16px; }
+html.web .page h2 { margin: 24px 0 10px; font-size: 20px; }
+html.web .page-head { flex-wrap: wrap; align-items: flex-start; gap: 10px; }
+html.web .page-head > div:last-child { display: flex; flex-wrap: wrap; gap: 8px; }
+html.web .dev-grid, html.web .scene-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+html.web .kpis { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+html.web .e-row { grid-template-columns: 1fr 70px 76px; gap: 8px; padding: 11px 12px; }
+html.web .e-row > :nth-child(4) { display: none; }
+html.web .set-grid, html.web .field-row { grid-template-columns: 1fr; }
+html.web .act-row { grid-template-columns: 1fr 1fr; }
+html.web .act-row > :last-child { justify-self: end; }
+
+/* ---------- painel do aparelho como folha que sobe de baixo ---------- */
+html.web .panel {
+  position: fixed; left: 0; right: 0; bottom: 0; top: calc(var(--safe-t) + 12px); width: auto !important; z-index: 40;
+  border-radius: 14px 14px 0 0; box-shadow: 0 -10px 40px rgba(0, 0, 0, .45);
+  transform: translateY(105%); transition: transform .38s var(--ease); visibility: hidden;
+}
+html.web .panel.open { transform: none; visibility: visible; }
+html.web .panel::before { content: ''; position: absolute; left: 50%; top: 6px; width: 36px; height: 5px; margin-left: -18px; border-radius: 3px; background: var(--fill2); z-index: 2; }
+html.web .panel-inner { width: 100%; padding: 18px 14px calc(var(--safe-b) + 24px); overscroll-behavior: contain; }
+html.web #sheet-dim { position: fixed; inset: 0; background: rgba(0, 0, 0, .4); z-index: 39; opacity: 0; pointer-events: none; transition: opacity .3s; }
+html.web.sheet-open #sheet-dim { opacity: 1; pointer-events: auto; }
+html.web .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+html.web .tile { min-height: 80px; padding: 9px 8px 8px; }
+html.web .tile .tv { font-size: 12px; }
+
+/* ---------- avisos ---------- */
+html.web #toasts { bottom: calc(var(--tabbar) + var(--safe-b) + 14px); width: calc(100% - 32px); }
+html.web .toast { text-align: center; }
+html.web .pop { max-height: 60vh; overflow-y: auto; }
+#conn-banner {
+  position: fixed; left: 12px; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 80; padding: 10px 14px; border-radius: 14px;
+  background: var(--orange); color: #1d1d1f; font-size: 13.5px; font-weight: 600; text-align: center; box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+}
+.locked { height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; gap: 6px; }
+.locked .brand-dot { width: 64px; height: 64px; border-radius: 18px; margin-bottom: 12px; }
+.locked .brand-dot::after { inset: 18px 15px 15px; border-width: 3px; }
+.locked p { color: var(--tx2); max-width: 300px; line-height: 1.5; }
+
+/* toques: sem efeitos de "hover" grudados no iPhone */
+@media (hover: none) {
+  html.web .tile:hover, html.web .chips button:hover, html.web .rk:hover { background: var(--fill); }
+  html.web .rocker-v .rk:hover, html.web .dpad .rk:not(.d-ok):hover { background: transparent; }
+}
+
+/* ---------- editores (cenas, regras, agendamentos) como folha de baixo ---------- */
+html.web .modal-bg { place-items: end stretch; }
+html.web .modal { width: auto; max-height: calc(100dvh - var(--safe-t) - 12px); border-radius: 14px 14px 0 0; padding: 20px 16px calc(var(--safe-b) + 16px); }
+html.web .modal .foot { flex-wrap: wrap; }
+.locked .brand-logo { width: 72px; height: 72px; margin-bottom: 12px; }
+
+/* =====================================================================
+   SmartHouse no iPhone (2.6): abas em cápsula de vidro, tela Casa discreta
+   ===================================================================== */
+html.web #app { grid-template-rows: 1fr; }
+html.web main { margin: 0; border-radius: 0; grid-row: 1; }
+html.web .rail {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--safe-b) + 8px); top: auto; width: min(92vw, 420px);
+  grid-row: auto; padding: 6px; border-radius: 32px; border-top: 0; height: auto;
+  background: var(--mat); backdrop-filter: blur(28px) saturate(190%); -webkit-backdrop-filter: blur(28px) saturate(190%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .12), 0 10px 30px rgba(0, 0, 0, .35);
+}
+html.web .rail button { height: 54px; border-radius: 26px; gap: 2px; font-size: 11px; font-weight: 600; color: var(--tx2); transition: background .25s, color .25s; }
+html.web .rail button span { display: block !important; opacity: 1 !important; width: auto !important; }
+html.web .rail button .rb-ic .ic { width: 24px; height: 24px; color: var(--tx2); stroke-width: 1.9; }
+html.web .rail button.active { background: var(--fill) !important; color: var(--accent); }
+html.web .rail button.active .rb-ic .ic { color: var(--accent); }
+html.web .view { padding-bottom: calc(var(--safe-b) + 78px); }
+html.web #view-home { padding-bottom: 0; }
+html.web #toasts { bottom: calc(var(--safe-b) + 88px); }
+/* tela Casa */
+html.web .hud { left: 16px; right: 16px; top: calc(var(--safe-t) + 12px); }
+html.web .home-head .dv-hello { font-size: 27px; margin-top: 8px; }
+html.web .home-head .dv-info { gap: 12px; font-size: 12px; }
+html.web .scene-tools { top: auto; bottom: calc(var(--safe-b) + 140px); right: 12px; }
+html.web .room-strip { left: 12px; right: 12px; transform: none; max-width: none; bottom: calc(var(--safe-b) + 84px); padding: 4px; }
+html.web #view-home .room-card.rc-pill { height: 36px; }
+/* painel em folha com o visual novo */
+html.web .panel { border-radius: 22px 22px 0 0; background: var(--bg); margin: 0 !important; }
+html.web .panel-inner { padding-top: 22px; }
+html.web .p-badge { background: linear-gradient(180deg, var(--c2), var(--c)); width: 42px; height: 42px; box-shadow: inset 0 1px 0 rgba(255,255,255,.25); } html.web .p-badge .ic { color: #fff; width: 22px; height: 22px; }

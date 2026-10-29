@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'">
+  <title>SmartHouse</title>
+  <script src="theme-boot.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <script type="importmap">
+    { "imports": {
+      "three": "./vendor/three/three.module.js",
+      "three/addons/": "./vendor/three/addons/"
+    } }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <header class="titlebar">
+      <div class="title-left"><div class="brand"><img class="brand-logo" src="assets/logo-ui.svg" alt=""><span>SmartHouse</span></div><button aria-label="Recolher a barra lateral" class="sb-toggle" id="btn-sidebar" title="Recolher a barra lateral (Ctrl+B)"></button></div>
+      <div class="status" id="status"></div>
+      <button class="upd-pill hidden" id="upd-pill" aria-label="Atualização disponível"></button>
+      <div class="clock" id="clock"></div>
+      <button aria-label="Mini" class="mini-btn" id="btn-mini" title="SmartHouse Mini: janela compacta sempre por cima (Ctrl+Shift+M)"></button>
+    </header>
+
+    <nav class="rail" id="rail">
+      <div class="rail-h">Casa</div>
+      <button aria-label="Casa" data-view="home" class="active" title="Casa"></button>
+      <button aria-label="Dispositivos" data-view="devices" title="Dispositivos"></button>
+      <button aria-label="Energia" data-view="energy" title="Energia"></button>
+      <div class="rail-h">Organizar</div>
+      <button aria-label="Automação" data-view="auto" title="Automação"></button>
+      <button aria-label="Planta da casa" data-view="plan" title="Planta da casa"></button>
+      <div class="rail-spacer"></div>
+      <button aria-label="Ajustes" data-view="settings" title="Ajustes"></button>
+    </nav>
+
+    <main id="main">
+      <section class="view active" id="view-home">
+        <div id="scene"></div>
+        <div id="overlay"></div>
+        <div class="hud" id="hud"></div>
+        <div class="scene-tools">
+          <button aria-label="Ver a casa inteira" class="icon-btn" id="btn-frame" title="Ver a casa inteira"></button>
+        </div>
+        <div class="room-strip" id="room-strip"></div>
+        <div class="empty-house hidden" id="empty-house">
+          <h2>Desenhe sua casa</h2>
+          <p>Crie os cômodos no editor de planta e posicione cada aparelho no lugar real.</p>
+          <button class="btn primary" data-goto="plan">Abrir editor de planta</button>
+        </div>
+      </section>
+      <section class="view" id="view-devices"></section>
+      <section class="view" id="view-auto"></section>
+      <section class="view" id="view-energy"></section>
+      <section class="view" id="view-plan"></section>
+      <section class="view" id="view-settings"></section>
+    </main>
+
+    <aside class="panel" id="panel"></aside>
+  </div>
+  <div id="pop-root"></div>
+  <div id="modal-root"></div>
+  <div id="toasts"></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

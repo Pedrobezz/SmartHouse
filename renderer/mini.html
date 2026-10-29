@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'">
+  <title>SmartHouse Mini</title>
+  <script src="theme-boot.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="mini.css">
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three/three.module.js", "three/addons/": "./vendor/three/addons/" } }
+  </script>
+</head>
+<body class="mini">
+  <header class="m-head">
+    <div class="m-brand"><img class="brand-logo" src="assets/logo-ui.svg" alt=""><div><b>SmartHouse</b><small id="m-sum">--</small></div></div>
+    <div class="m-btns">
+      <button aria-label="Fixar sempre por cima" id="m-pin" title="Fixar sempre por cima"></button>
+      <button aria-label="Abrir app completo" id="m-main" title="Abrir app completo"></button>
+      <button aria-label="Fechar" id="m-close" title="Fechar (Ctrl+Shift+M)"></button>
+    </div>
+  </header>
+  <nav class="m-tabs" id="m-tabs">
+    <button data-tab="fav">Favoritos</button>
+    <button data-tab="rooms">Cômodos</button>
+    <button data-tab="scenes">Cenas</button>
+  </nav>
+  <main id="m-body"></main>
+  <div id="toasts"></div>
+  <script type="module" src="mini.js"></script>
+</body>
+</html>
