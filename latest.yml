@@ -1,0 +1,8 @@
+version: 2.15.0
+files:
+  - url: SmartHouse-Setup-2.15.0.exe
+    sha512: l49DNdHGd7xczKREeeGcaWyS11qwYLVvhSNot/mI8bNoduDhJDguTUaVsBmzXJ+ytC/fbR1hEfR7xlmBgyjddg==
+    size: 94505014
+path: SmartHouse-Setup-2.15.0.exe
+sha512: l49DNdHGd7xczKREeeGcaWyS11qwYLVvhSNot/mI8bNoduDhJDguTUaVsBmzXJ+ytC/fbR1hEfR7xlmBgyjddg==
+releaseDate: '2026-10-29T03:27:04.965Z'
