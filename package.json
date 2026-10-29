@@ -1,7 +1,7 @@
 {
   "name": "casa-3d",
   "productName": "SmartHouse",
-  "version": "2.14.0",
+  "version": "2.15.0",
   "description": "SmartHouse",
   "main": "main.js",
   "scripts": {

@@ -505,6 +505,11 @@ class Hub extends EventEmitter {
       while (arr.length && arr[0][0] < cutoff) arr.shift();
     }
     this.store.set('energy', energy);
+    // histórico por dia: soma o último trecho de cada série (na 1ª vez, aproveita os 7 dias que já existem)
+    let daily = this.store.get('energyDaily');
+    if (!daily || !Object.keys(daily).length) daily = backfillDaily(energy);
+    else for (const [k, h] of Object.entries(energy)) if (h.length > 1 && h[h.length - 1][0] === now) addSegment(daily, k, h[h.length - 2], h[h.length - 1]);
+    this.store.set('energyDaily', pruneDaily(daily, now));
     this._checkGoal(energy, now);
   }
   // meta do mês: avisa (no PC e no celular) uma vez por dia se a projeção passar da meta
@@ -716,6 +721,16 @@ function monthProjection(energy, tariff = 0.85, now = Date.now()) {
   return { kwh24: k, month: k * tariff * 30 };
 }
 
+// histórico longo: kWh por dia e por aparelho ({ 'AAAA-MM-DD': { chave: kWh } }), guardado por ~2 anos
+const dayKey = t => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+function addSegment(daily, key, a, b) { // trecho entre duas leituras [t, W]; buracos de mais de 30 min (app fechado) não contam
+  const dt = (b[0] - a[0]) / 36e5; if (!(dt > 0 && dt < 0.5)) return;
+  const kwh = (a[1] + b[1]) / 2 * dt / 1000; if (!(kwh > 0)) return;
+  const day = daily[dayKey(b[0])] || (daily[dayKey(b[0])] = {}); day[key] = (day[key] || 0) + kwh;
+}
+function backfillDaily(energy) { const daily = {}; for (const [k, h] of Object.entries(energy || {})) for (let i = 1; i < h.length; i++) addSegment(daily, k, h[i - 1], h[i]); return daily; }
+function pruneDaily(daily, now = Date.now(), keepDays = 800) { const lim = dayKey(now - keepDays * 864e5); for (const d of Object.keys(daily)) if (d < lim) delete daily[d]; return daily; }
+
 function estimateAcWatts(st, cfg, onForMin = 60) {
   const W = +cfg?.w || 0;
   if (!W || !st?.on) return 0;
@@ -784,4 +799,4 @@ function roomAt(layout, x, y) {
   return best;
 }
 
-module.exports = { Hub, roomAt, linkTargets, estimateAcWatts, kwh24, monthProjection };
+module.exports = { Hub, roomAt, linkTargets, estimateAcWatts, kwh24, monthProjection, addSegment, backfillDaily, pruneDaily, dayKey };

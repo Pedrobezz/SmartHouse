@@ -136,6 +136,7 @@ class RemoteServer {
       }
       if (req.method === 'GET') {
         if (r === 'all') return this._json(res, 200, sanitize(this.all()));
+        if (r === 'energy-daily') return this._json(res, 200, this.store.get('energyDaily') || {});
         if (r === 'energy') return this._json(res, 200, this.store.get('energy')[url.searchParams.get('id')] || []);
         if (r === 'profile') { const id = url.searchParams.get('id'); const d = this.hub.devices.get(id); return this._json(res, 200, sanitize(this.hub.lgProfiles?.[id] || { caps: d?.caps, state: d?.state })); }
       }

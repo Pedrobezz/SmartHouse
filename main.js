@@ -218,6 +218,7 @@ app.whenReady().then(async () => {
   ipcMain.handle('run-scene', (_, id) => hub.runScene(id));
   ipcMain.handle('device-profile', (_, id) => hub.lgProfiles[id] || { caps: hub.devices.get(id)?.caps, state: hub.devices.get(id)?.state });
   ipcMain.handle('get-energy', (_, id) => store.get('energy')[id] || []);
+  ipcMain.handle('get-energy-daily', () => store.get('energyDaily') || {});
   ipcMain.handle('save', (_, key, value) => {
     if (!['layout', 'placements', 'scenes', 'schedules', 'aliases', 'rules', 'links', 'acPower', 'pcConf', 'energyGoal'].includes(key)) throw new Error('chave inválida');
     store.set(key, value);

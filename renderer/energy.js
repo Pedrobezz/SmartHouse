@@ -78,6 +78,7 @@ export function energyItems() {
 }
 export async function renderEnergy() {
   for (const it of energyItems()) energyHist[it.key] = await api.getEnergy(it.key);
+  try { energyDaily = (await api.getEnergyDaily?.()) || {}; dailyT = Date.now(); } catch (_) { energyDaily = {}; }
   const el = $('#view-energy');
   el.innerHTML = `<div class="dv en">
     <div class="dv-main">
@@ -86,6 +87,8 @@ export async function renderEnergy() {
       <div class="en-kpis" data-kpis></div>
       <div class="en-duo"><div class="en-card" data-split></div><div class="en-card" data-goal></div></div>
       <div class="en-chart"><div class="en-chart-h"><b>Potência total</b><span>últimas 24 horas</span></div><canvas class="chart" data-total></canvas></div>
+      <div class="en-card en-hist"><div class="en-ch"><b>Histórico</b><div class="seg en-hseg" data-hseg><button data-v="days">30 dias</button><button data-v="months">12 meses</button></div></div>
+        <div class="en-hsum" data-hsum></div><canvas class="chart en-hchart" data-hchart></canvas><div class="en-legend" data-hleg></div></div>
       <div class="en-card en-rooms"><div class="en-chart-h"><b>Por cômodo</b><span>últimas 24 horas</span></div><div data-rooms></div></div>
     </div>
     <div class="dv-side">
@@ -93,6 +96,8 @@ export async function renderEnergy() {
       <div class="en-list" data-rows></div>
     </div></div>`;
   renderEnergyLive();
+  renderHistory();
+  $('[data-hseg]', el).onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; histMode = b.dataset.v; try { localStorage.setItem('enHist', histMode); } catch (_) {} renderHistory(); };
 }
 export function kwh24(h) { const pts = h.filter(p => p[0] > Date.now() - 864e5); let e = 0; for (let i = 1; i < pts.length; i++) { const dt = (pts[i][0] - pts[i - 1][0]) / 36e5; if (dt < 0.5) e += (pts[i][1] + pts[i - 1][1]) / 2 * dt; } return e / 1000; }
 export function renderEnergyLive() {
@@ -145,6 +150,7 @@ export function renderEnergyLive() {
       <div class="bar"><i style="width:${k / max * 100}%"></i></div>
       <div class="en-foot"><span>${fmt(k, 2)} kWh em 24 h</span><span>R$ ${fmt(k * tariff, 2)}</span></div></button>`).join('') || '<p class="dv-empty">Nada medindo ainda. Tomadas com medição aparecem sozinhas. Para luminárias e ar-condicionado, informe a potência.</p>';
   $('[data-rows]', el).onclick = e => { if (e.target.closest('[data-pc]')) return openPanel({ type: 'pc' }); const r = e.target.closest('[data-dev]'); if (r) openPanel({ type: 'device', id: r.dataset.dev }); };
+  renderHistory();
 }
 
 export function drawLine(cv, pts, color, unit) {
@@ -166,3 +172,59 @@ export function drawLine(cv, pts, color, unit) {
   c.beginPath(); pts.forEach(([t, v], i) => (i ? c.lineTo(X(t), Y(v)) : c.moveTo(X(t), Y(v)))); c.strokeStyle = color; c.lineWidth = 1.6; c.stroke();
 }
 
+
+// ---------- histórico longo (kWh por dia, guardado por ~2 anos) ----------
+let energyDaily = {}, histMode = (() => { try { return localStorage.getItem('enHist') || 'days'; } catch (_) { return 'days'; } })();
+const isEstKey = k => k === 'pc' || k.startsWith('lamp:') || !!dev(k)?.state?.powerEst;
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+function sumDay(day) { let m = 0, e = 0; for (const [k, v] of Object.entries(day || {})) (isEstKey(k) ? (e += v) : (m += v)); return { m, e }; }
+export function historyBuckets(daily, mode, today = new Date()) {
+  const out = [];
+  if (mode === 'months') {
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1), pre = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      let m = 0, e = 0, n = 0; for (const [k, day] of Object.entries(daily)) if (k.startsWith(pre)) { const x = sumDay(day); m += x.m; e += x.e; n++; }
+      out.push({ label: MESES[d.getMonth()] + (d.getMonth() === 0 || i === 11 ? ` ${String(d.getFullYear()).slice(2)}` : ''), m, e, n, cur: i === 0 });
+    }
+  } else {
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i), x = sumDay(daily[ymd(d)]);
+      out.push({ label: `${d.getDate()}/${d.getMonth() + 1}`, m: x.m, e: x.e, n: daily[ymd(d)] ? 1 : 0, cur: i === 0 });
+    }
+  }
+  return out;
+}
+let dailyT = Date.now();
+function renderHistory() {
+  const el = $('#view-energy'), cv = $('[data-hchart]', el); if (!cv) return;
+  if (Date.now() - dailyT > 300e3) { dailyT = Date.now(); api.getEnergyDaily?.().then(d => { energyDaily = d || {}; renderHistory(); }).catch(() => {}); }
+  for (const b of $('[data-hseg]', el).children) b.classList.toggle('on', b.dataset.v === histMode);
+  const tariff = S.settings.tariff ?? 0.85, B = historyBuckets(energyDaily, histMode), now = new Date();
+  // resumo: este mês até agora x mês passado (ou média por dia)
+  const monthKwh = off => { const d = new Date(now.getFullYear(), now.getMonth() + off, 1), pre = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; let k = 0, n = 0; for (const [day, v] of Object.entries(energyDaily)) if (day.startsWith(pre)) { const x = sumDay(v); k += x.m + x.e; n++; } return { k, n }; };
+  const cur = monthKwh(0), prev = monthKwh(-1), days = Object.keys(energyDaily).length;
+  const avg = days ? Object.values(energyDaily).reduce((a, v) => { const x = sumDay(v); return a + x.m + x.e; }, 0) / days : 0;
+  $('[data-hsum]', el).innerHTML = !days ? '<p class="en-note" style="margin:0">O histórico começa a encher agora: cada dia fica guardado por cerca de 2 anos, mesmo depois que os gráficos de 24 h se renovam.</p>'
+    : `<div><small>Este mês (até hoje)</small><b>R$ ${fmt(cur.k * tariff, 2)}</b><span>${fmt(cur.k, 1)} kWh</span></div>
+       <div><small>Mês passado</small><b>${prev.n ? `R$ ${fmt(prev.k * tariff, 2)}` : '—'}</b><span>${prev.n ? `${fmt(prev.k, 1)} kWh${prev.n < 25 ? ` · ${prev.n} dias com dados` : ''}` : 'sem dados ainda'}</span></div>
+       <div><small>Média por dia</small><b>R$ ${fmt(avg * tariff, 2)}</b><span>${fmt(avg, 2)} kWh · ${days} dia${days === 1 ? '' : 's'}</span></div>`;
+  // gráfico de barras: medido (verde) embaixo, estimado (amarelo) em cima
+  const dpr = devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight; if (!W) return;
+  cv.width = W * dpr; cv.height = H * dpr; const c = cv.getContext('2d'); c.scale(dpr, dpr); c.clearRect(0, 0, W, H);
+  const cs = getComputedStyle(document.documentElement), tx3 = cs.getPropertyValue('--tx3'), sep = cs.getPropertyValue('--sep2');
+  const padL = 36, padB = 20, padT = 8, max = Math.max(0.1, ...B.map(b => b.m + b.e)) * 1.12, bw = (W - padL) / B.length;
+  c.font = '11px Inter'; c.fillStyle = tx3; c.strokeStyle = sep; c.lineWidth = 1;
+  for (let i = 0; i <= 3; i++) { const y = padT + (H - padT - padB) * i / 3; c.beginPath(); c.moveTo(padL, y); c.lineTo(W, y); c.stroke(); c.fillText(fmt(max * (1 - i / 3), max < 3 ? 1 : 0), 2, y + 4); }
+  const Y = v => (H - padT - padB) * v / max, base = H - padB, r = Math.min(5, bw * 0.3);
+  const bar = (x, y, w, h, col, top) => { if (h <= 0.3) return; c.fillStyle = col; c.beginPath(); if (top) c.roundRect(x, y, w, h, [r, r, 0, 0]); else c.rect(x, y, w, h); c.fill(); };
+  B.forEach((b, i) => {
+    const x = padL + i * bw + bw * 0.16, w = bw * 0.68, hm = Y(b.m), he = Y(b.e);
+    bar(x, base - hm, w, hm, b.cur ? '#30d158' : '#2fb653', he <= 0.3);
+    bar(x, base - hm - he, w, he, b.cur ? '#ffd60a' : '#e6b800', true);
+    const step = histMode === 'months' ? 1 : 5;
+    if (i % step === (histMode === 'months' ? 0 : 4) || b.cur) { c.fillStyle = b.cur ? cs.getPropertyValue('--tx') : tx3; const lw = c.measureText(b.label).width, lx = Math.min(W - lw / 2 - 1, x + w / 2); c.textAlign = 'center'; c.fillText(b.label, lx, H - 4); c.textAlign = 'left'; }
+  });
+  cv.onmousemove = e => { const i = Math.floor((e.offsetX - padL) / bw), b = B[i]; cv.title = b ? `${b.label}: ${fmt(b.m + b.e, 2)} kWh · R$ ${fmt((b.m + b.e) * tariff, 2)}${b.e ? ` (estimado ${fmt(b.e, 2)} kWh)` : ''}` : ''; };
+  $('[data-hleg]', el).innerHTML = `<span><i class="m"></i>Medido</span><span><i class="e"></i>Estimado</span><span>kWh por ${histMode === 'months' ? 'mês' : 'dia'} · passe o mouse nas barras</span>`;
+}

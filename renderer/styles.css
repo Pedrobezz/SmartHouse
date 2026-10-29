@@ -1515,3 +1515,15 @@ select option:disabled { color: rgba(235, 235, 245, .4); }
 .hl-pop button .ic { width: 14px; height: 14px; color: var(--tx3); }
 .hl-pop .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #ff453a; }
 .hl-note { margin: 6px 10px 6px; font-size: 11.5px; color: var(--tx3); line-height: 1.4; }
+
+/* histórico longo de energia */
+.en-hist { margin-top: 16px; }
+.en-hseg { margin: 0 !important; width: 190px; }
+.en-hseg button { font-size: 12px; }
+.en-hsum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 4px 0 12px; }
+.en-hsum div { display: flex; flex-direction: column; gap: 2px; }
+.en-hsum small { color: var(--dv-tx2, var(--tx2)); font-size: 11.5px; }
+.en-hsum b { font-size: 20px; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.en-hsum span { color: var(--dv-tx2, var(--tx2)); font-size: 11.5px; }
+.en-hchart { width: 100%; height: 190px; display: block; }
+@media (max-width: 560px) { .en-hsum { grid-template-columns: 1fr 1fr; } }

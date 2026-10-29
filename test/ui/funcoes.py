@@ -52,6 +52,10 @@ async def main():
         await pg.evaluate("(()=>{document.querySelector('[data-goal-in]').value='300'; document.querySelector('[data-goal-ok]').click()})()"); await pg.wait_for_timeout(700)
         ok('energia: meta salva', await pg.evaluate("__dbg.S.energyGoal") == 300)
         await pg.evaluate("api.save('energyGoal', 0); __dbg.S.energyGoal=0")
+        ok('energia: histórico aparece', await pg.evaluate("!!document.querySelector('[data-hchart]') && !!document.querySelector('[data-hsum]')"))
+        await pg.evaluate("document.querySelector('[data-hseg] [data-v=months]').click()")
+        ok('energia: histórico por mês', await pg.evaluate("document.querySelector('[data-hseg] .on')?.dataset.v") == 'months')
+        await pg.evaluate("document.querySelector('[data-hseg] [data-v=days]').click()")
         ok('energia: computador aparece', await pg.evaluate("!!document.querySelector('[data-pc]')"))
 
         # aviso de aparelho sem resposta

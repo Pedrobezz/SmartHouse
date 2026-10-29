@@ -1,5 +1,10 @@
 // Novidades de cada versão (a mais nova primeiro). Mostradas depois de uma atualização.
 export const CHANGELOG = [
+  { version: '2.15.0', date: '2026-10-29', title: 'Histórico de energia', items: [
+    ['bolt', 'Dois anos de histórico', 'O consumo de cada dia fica guardado por cerca de 2 anos (antes, só os últimos 7 dias). Na aba Energia, o cartão Histórico mostra os últimos 30 dias ou os 12 meses, separando medido e estimado.'],
+    ['bolt', 'Este mês x mês passado', 'Veja quanto já gastou no mês, quanto foi no mês passado e a média por dia. Passe o mouse nas barras para ver kWh e reais de cada dia ou mês.'],
+    ['check', 'Vai no backup', 'O histórico entra no backup da casa, então não se perde ao trocar de computador.'],
+  ] },
   { version: '2.14.0', date: '2026-10-29', title: 'Mais organizado e mais seguro', items: [
     ['layers', 'Menu Vista', 'Os botões do topo da tela Casa viraram um só: em "Vista" você escolhe 3D ou planta, hora do dia, paredes, rótulos e clima, e começa o passeio. Ficam soltos só o som e o enquadrar.'],
     ['bolt', 'Energia mais clara', 'A aba Energia separa o que é medido do que é estimado, mostra o consumo por cômodo e tem meta do mês: o app avisa no PC e no celular se a projeção passar.'],

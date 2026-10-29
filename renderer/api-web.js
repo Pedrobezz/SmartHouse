@@ -92,6 +92,7 @@
     runScene: id => call('POST', 'api/scene', { id }),
     deviceProfile: id => call('GET', 'api/profile?id=' + encodeURIComponent(id)),
     getEnergy: id => call('GET', 'api/energy?id=' + encodeURIComponent(id)),
+    getEnergyDaily: () => call('GET', 'api/energy-daily'),
     save: (k, value) => call('POST', 'api/save', { key: k, value }),
     rename: (id, name) => call('POST', 'api/rename', { id, name }),
     saveSettings: onlyPc, tuyaScan: onlyPc, tuyaAdd: onlyPc, tuyaRemove: onlyPc, ewelinkLogin: onlyPc, ewelinkLogout: onlyPc, resetLayout: onlyPc,

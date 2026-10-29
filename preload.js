@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('api', {
   runScene: id => ipcRenderer.invoke('run-scene', id),
   deviceProfile: id => ipcRenderer.invoke('device-profile', id),
   getEnergy: id => ipcRenderer.invoke('get-energy', id),
+  getEnergyDaily: () => ipcRenderer.invoke('get-energy-daily'),
   save: (key, value) => ipcRenderer.invoke('save', key, value),
   backupExport: () => ipcRenderer.invoke('backup-export'),
   backupImport: () => ipcRenderer.invoke('backup-import'),

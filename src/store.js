@@ -18,7 +18,8 @@ const DEFAULTS = {
   schedules: [],
   rules: [],
   links: [],             // teclas ligadas entre interruptores: [{ id, a:{dev,ch}, b:{dev,ch}, mode:'sync'|'follow', enabled }]
-  energy: {},            // deviceId -> [[timestamp, watts], ...]
+  energy: {},            // deviceId -> [[timestamp, watts], ...] (últimos 7 dias, 1 ponto por minuto)
+  energyDaily: {},       // 'AAAA-MM-DD' -> { deviceId: kWh } (cerca de 2 anos)
   pcConf: {},            // este computador: { enabled, kind:'auto'|'desktop'|'notebook', monitors, monitorW, cpuTdp, gpuTdp, screenOffMin }
   energyGoal: 0,         // meta da conta de luz do mês (R$); 0 = sem meta
   acPower: {},           // ar-condicionado: deviceId -> { w (potência da etiqueta), inverter } para estimar o consumo
