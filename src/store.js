@@ -20,6 +20,7 @@ const DEFAULTS = {
   links: [],             // teclas ligadas entre interruptores: [{ id, a:{dev,ch}, b:{dev,ch}, mode:'sync'|'follow', enabled }]
   energy: {},            // deviceId -> [[timestamp, watts], ...]
   pcConf: {},            // este computador: { enabled, kind:'auto'|'desktop'|'notebook', monitors, monitorW, cpuTdp, gpuTdp, screenOffMin }
+  energyGoal: 0,         // meta da conta de luz do mês (R$); 0 = sem meta
   acPower: {},           // ar-condicionado: deviceId -> { w (potência da etiqueta), inverter } para estimar o consumo
   localCache: {},        // deviceId -> { ip, version }
   tuyaDevices: {},       // deviceId -> { id, name, key (local key), dpMap, raw, category } salvo após 1ª conexão

@@ -1,5 +1,13 @@
 // Novidades de cada versão (a mais nova primeiro). Mostradas depois de uma atualização.
 export const CHANGELOG = [
+  { version: '2.14.0', date: '2026-10-29', title: 'Mais organizado e mais seguro', items: [
+    ['layers', 'Menu Vista', 'Os botões do topo da tela Casa viraram um só: em "Vista" você escolhe 3D ou planta, hora do dia, paredes, rótulos e clima, e começa o passeio. Ficam soltos só o som e o enquadrar.'],
+    ['bolt', 'Energia mais clara', 'A aba Energia separa o que é medido do que é estimado, mostra o consumo por cômodo e tem meta do mês: o app avisa no PC e no celular se a projeção passar.'],
+    ['bolt', 'Aviso de aparelho sem resposta', 'Quando um aparelho para de responder por mais de 2 minutos ou uma conta desconecta, aparece um aviso vermelho no topo e chega uma notificação no PC e no celular. Dá para desligar em Ajustes → Geral.'],
+    ['check', 'Backup da casa', 'Em Ajustes → Geral, exporte planta, cenas, regras, horários, nomes e potências para um arquivo e restaure em outro computador. Senhas e chaves das contas não vão no arquivo.'],
+    ['phone', 'App no celular', 'No celular, o SmartHouse mostra como instalar na tela inicial: abre em tela cheia, como um app, com atalhos para Dispositivos e Energia.'],
+    ['gear', 'Por dentro', 'Código guardado no GitHub, partes do app separadas e testes automáticos das telas antes de cada versão.'],
+  ] },
   { version: '2.13.0', date: '2026-10-28', title: 'Consumo do computador', items: [
     ['display', 'Este computador na aba Energia', 'O SmartHouse estima quanto o seu PC gasta pelo uso do processador e da placa de vídeo, somando placa-mãe, memória, discos e monitores. Toque em "Este computador" na aba Energia para ver o detalhe.'],
     ['bolt', 'Mais preciso quando dá', 'Com placa NVIDIA, usa o consumo real informado por ela. Em notebook fora da tomada, usa a descarga real da bateria. Monitores em descanso quase não contam.'],

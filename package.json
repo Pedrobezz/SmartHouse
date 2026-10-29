@@ -1,12 +1,14 @@
 {
   "name": "casa-3d",
   "productName": "SmartHouse",
-  "version": "2.13.0",
+  "version": "2.14.0",
   "description": "SmartHouse",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win nsis portable --publish never"
+    "dist": "electron-builder --win nsis portable --publish never",
+    "test": "node --test test/*.mjs",
+    "test:ui": "bash test/ui/run.sh"
   },
   "author": "SmartHouse",
   "license": "MIT",

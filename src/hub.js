@@ -34,7 +34,7 @@ class Hub extends EventEmitter {
   // ---------------- ciclo de vida ----------------
   async start() {
     this.stop();
-    this.gen = (this.gen || 0) + 1;
+    this.gen = (this.gen || 0) + 1; this._startedAt = Date.now();
     this.devices.clear();
     const s = this.store.get('settings');
     // clima real (Open-Meteo, sem chave): a cada 15 min
@@ -505,6 +505,18 @@ class Hub extends EventEmitter {
       while (arr.length && arr[0][0] < cutoff) arr.shift();
     }
     this.store.set('energy', energy);
+    this._checkGoal(energy, now);
+  }
+  // meta do mês: avisa (no PC e no celular) uma vez por dia se a projeção passar da meta
+  _checkGoal(energy, now = Date.now()) {
+    const goal = +this.store.get('energyGoal') || 0; if (!goal) return;
+    const tariff = this.store.get('settings').tariff ?? 0.85, p = monthProjection(energy, tariff, now);
+    const day = new Date(now).toDateString();
+    if (p.month > goal && this._goalDay !== day) {
+      this._goalDay = day;
+      const brl = v => 'R$ ' + v.toFixed(0);
+      this.emit('notify', { title: 'Consumo acima da meta', body: `No ritmo das últimas 24 h, a conta do mês fica em ~${brl(p.month)} (meta ${brl(goal)}). Veja a aba Energia.` });
+    }
   }
 
   async _fetchWeather() {
@@ -657,8 +669,33 @@ class Hub extends EventEmitter {
       }
     }
   }
+  // saúde: aparelho que parou de responder (mais de 2 min) ou conta com erro → aviso no PC e no celular, uma vez
+  _checkHealth(now = Date.now()) {
+    if (this.store.get('settings').healthAlerts === false) return;
+    if (!this._startedAt || now - this._startedAt < 180e3) return; // logo ao abrir, os aparelhos ainda estão conectando
+    const off = this._offSince || (this._offSince = {}), told = this._told || (this._told = new Set());
+    const gone = [];
+    for (const d of this.devices.values()) {
+      if (d.provider === 'demo') continue;
+      if (d.online === false) {
+        off[d.id] = off[d.id] || now;
+        if (now - off[d.id] > 120e3 && !told.has(d.id)) { told.add(d.id); gone.push(this.store.get('aliases')[d.id] || d.name); }
+      } else {
+        if (told.has(d.id)) this.log(`${this.store.get('aliases')[d.id] || d.name} voltou a responder`);
+        delete off[d.id]; told.delete(d.id);
+      }
+    }
+    if (gone.length) this.emit('notify', { title: gone.length === 1 ? `${gone[0]} parou de responder` : `${gone.length} aparelhos pararam de responder`, body: gone.length === 1 ? 'Confira se está ligado e no Wi-Fi de casa.' : gone.join(', ') });
+    const NAMES = { tuya: 'Tuya / Ekaza', lg: 'LG ThinQ', ewelink: 'Sonoff (eWeLink)' };
+    for (const [k, msg] of Object.entries(this.errors || {})) {
+      if (!msg || told.has('err:' + k)) continue;
+      told.add('err:' + k); this.emit('notify', { title: `${NAMES[k] || k} desconectou`, body: String(msg).slice(0, 160) });
+    }
+    for (const k of [...told]) if (k.startsWith('err:') && !this.errors?.[k.slice(4)]) told.delete(k);
+  }
   _emit() {
     try { this._checkLinks(); } catch (_) {}
+    try { this._checkHealth(); } catch (_) {}
     clearTimeout(this._et);
     this._et = setTimeout(() => this.emit('update', this.snapshot()), 50);
   }
@@ -667,6 +704,18 @@ class Hub extends EventEmitter {
 // Potência estimada de um ar-condicionado (W) a partir da potência da etiqueta e do estado.
 // Inverter: o compressor trabalha mais quanto maior a diferença entre o ambiente e o alvo; nos primeiros 10 min, quase cheio.
 // Convencional: liga e desliga; em média ~85% enquanto falta resfriar e ~45% mantendo.
+// kWh das últimas 24 h de uma série [[t, W], ...] (buracos maiores que 30 min não contam: app fechado)
+function kwh24(h, now = Date.now()) {
+  const pts = (h || []).filter(p => p[0] > now - 864e5); let e = 0;
+  for (let i = 1; i < pts.length; i++) { const dt = (pts[i][0] - pts[i - 1][0]) / 36e5; if (dt < 0.5) e += (pts[i][1] + pts[i - 1][1]) / 2 * dt; }
+  return e / 1000;
+}
+// projeção do mês em R$ pelas últimas 24 h de tudo que mede ou é estimado
+function monthProjection(energy, tariff = 0.85, now = Date.now()) {
+  let k = 0; for (const h of Object.values(energy || {})) k += kwh24(h, now);
+  return { kwh24: k, month: k * tariff * 30 };
+}
+
 function estimateAcWatts(st, cfg, onForMin = 60) {
   const W = +cfg?.w || 0;
   if (!W || !st?.on) return 0;
@@ -735,4 +784,4 @@ function roomAt(layout, x, y) {
   return best;
 }
 
-module.exports = { Hub, roomAt, linkTargets, estimateAcWatts };
+module.exports = { Hub, roomAt, linkTargets, estimateAcWatts, kwh24, monthProjection };

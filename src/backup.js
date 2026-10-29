@@ -1,6 +1,6 @@
 // Backup das configurações da casa (sem senhas, chaves nem tokens das contas): planta, aparelhos no mapa,
 // nomes, cenas, regras, horários, teclas ligadas e potências. Serve para trocar de PC ou montar um servidor 24/7.
-const KEYS = ['layout', 'placements', 'aliases', 'scenes', 'schedules', 'rules', 'links', 'acPower', 'pcConf'];
+const KEYS = ['layout', 'placements', 'aliases', 'scenes', 'schedules', 'rules', 'links', 'acPower', 'pcConf', 'energyGoal'];
 const SECRET_SETTINGS = ['tuya', 'lg', 'ewelink', 'mobile']; // contas e acesso pelo celular ficam só neste PC
 
 function makeBackup(store, version) {

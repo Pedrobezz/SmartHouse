@@ -13,7 +13,7 @@ const MIME = {
 };
 // campos que nunca saem do PC
 const SECRET_KEYS = /^(accessSecret|appSecret|token|pat|at|rt|password|local_?key|localKey|devicekey|secret|refresh_?token|access_?token)$/i;
-const SAVE_KEYS = ['scenes', 'schedules', 'rules', 'aliases', 'links', 'acPower', 'pcConf'];
+const SAVE_KEYS = ['scenes', 'schedules', 'rules', 'aliases', 'links', 'acPower', 'pcConf', 'energyGoal'];
 
 function sanitize(v) {
   if (Array.isArray(v)) return v.map(sanitize);
@@ -160,8 +160,14 @@ class RemoteServer {
       const k = url.searchParams.get('k') || '';
       res.writeHead(200, { 'content-type': MIME['.webmanifest'], 'cache-control': 'no-store' });
       return res.end(JSON.stringify({
-        name: 'SmartHouse', short_name: 'SmartHouse', display: 'standalone', background_color: '#000000', theme_color: '#000000',
-        start_url: `./?k=${encodeURIComponent(k)}`, scope: './', icons: [{ src: 'assets/icon-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }],
+        id: 'smarthouse', name: 'SmartHouse', short_name: 'SmartHouse', description: 'Sua casa: luzes, ar-condicionado, cenas e consumo', lang: 'pt-BR',
+        display: 'standalone', display_override: ['standalone', 'fullscreen'], orientation: 'portrait', background_color: '#000000', theme_color: '#000000',
+        start_url: `./?k=${encodeURIComponent(k)}&app=1`, scope: './',
+        icons: [
+          { src: 'assets/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' }, { src: 'assets/icon.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'assets/icon-maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' }, { src: 'assets/icon-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+        shortcuts: [{ name: 'Dispositivos', url: `./?k=${encodeURIComponent(k)}&app=1#devices` }, { name: 'Energia', url: `./?k=${encodeURIComponent(k)}&app=1#energy` }],
       }));
     }
     if (p === '/' || p === '/index.html') return this._page(req, res, url);

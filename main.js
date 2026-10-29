@@ -197,7 +197,7 @@ app.whenReady().then(async () => {
 
   const all = () => ({
     ...hub.snapshot(),
-    layout: store.get('layout'), placements: store.get('placements'), scenes: store.get('scenes'), links: store.get('links') || [], acPower: store.get('acPower') || {}, pcConf: store.get('pcConf') || {},
+    layout: store.get('layout'), placements: store.get('placements'), scenes: store.get('scenes'), links: store.get('links') || [], acPower: store.get('acPower') || {}, pcConf: store.get('pcConf') || {}, energyGoal: store.get('energyGoal') || 0,
     schedules: store.get('schedules'), rules: store.get('rules'), settings: store.get('settings'), logs: hub.logs, version: app.getVersion(),
   });
 
@@ -219,7 +219,7 @@ app.whenReady().then(async () => {
   ipcMain.handle('device-profile', (_, id) => hub.lgProfiles[id] || { caps: hub.devices.get(id)?.caps, state: hub.devices.get(id)?.state });
   ipcMain.handle('get-energy', (_, id) => store.get('energy')[id] || []);
   ipcMain.handle('save', (_, key, value) => {
-    if (!['layout', 'placements', 'scenes', 'schedules', 'aliases', 'rules', 'links', 'acPower', 'pcConf'].includes(key)) throw new Error('chave inválida');
+    if (!['layout', 'placements', 'scenes', 'schedules', 'aliases', 'rules', 'links', 'acPower', 'pcConf', 'energyGoal'].includes(key)) throw new Error('chave inválida');
     store.set(key, value);
     if (key === 'scenes') rebuildTray();
     hub._emit();

@@ -7,6 +7,21 @@
   try { if (!localStorage.getItem('quality')) localStorage.setItem('quality', 'medium'); } catch (_) {}
   document.documentElement.classList.add('web');
   if (navigator.standalone || matchMedia('(display-mode: standalone)').matches) document.documentElement.classList.add('standalone');
+  // convite para instalar como app (ícone na tela inicial, tela cheia): some depois de instalado ou se a pessoa dispensar
+  const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  const showHint = () => {
+    if (document.querySelector('#modal-root')?.children.length) return setTimeout(showHint, 3000); // espera fechar o "O que há de novo"
+    let skip = false; try { skip = localStorage.getItem('installHint') === 'no'; } catch (_) {}
+    if (standalone || skip || !document.querySelector('#app')) return;
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent), share = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+    const b = document.createElement('div'); b.className = 'install-hint';
+    b.innerHTML = `<img src="assets/touch-icon.png" alt=""><div><b>Instale o SmartHouse</b><span>${ios ? `Toque em ${share} <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.` : 'No menu <b>⋮</b> do navegador, toque em <b>Adicionar à tela inicial</b> (ou <b>Instalar app</b>).'} Abre em tela cheia, como um app.</span></div><button aria-label="Dispensar">✕</button>`;
+    b.querySelector('button').onclick = () => { b.remove(); try { localStorage.setItem('installHint', 'no'); } catch (_) {} };
+    document.body.appendChild(b);
+  };
+  window.addEventListener('load', () => setTimeout(showHint, 2500));
+  // atalhos do ícone (Dispositivos / Energia)
+  if (/^#(devices|energy)$/.test(location.hash)) window.addEventListener('load', () => setTimeout(() => document.querySelector(`[data-view="${location.hash.slice(1)}"]`)?.click(), 800));
 
   const L = { update: [], log: [] };
   const sleep = ms => new Promise(r => setTimeout(r, ms));
