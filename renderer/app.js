@@ -87,7 +87,7 @@ async function init() {
   const setLm = m => { lm = m; house.setLabelMode(m); lmBtn.innerHTML = `${I('grid')}<span>${MODES.find(x => x[0] === m)[1]}</span>`; try { localStorage.setItem('labelMode', m); } catch (_) {} };
   lmBtn.title = 'Mostrar mais ou menos informações no mapa';
   lmBtn.onclick = () => setLm(MODES[(MODES.findIndex(x => x[0] === lm) + 1) % MODES.length][0]);
-  $('.scene-tools').prepend(lmBtn);
+  // (os botões antigos viraram opções do menu Vista)
   setTimeout(() => setLm(lm));
   setTimeout(() => house.setQuality(getQuality()));
   const NM = [['auto', 'sun', 'Dia/noite: automático'], ['day', 'sun', 'Vista dia'], ['night', 'moon', 'Vista noite']];
@@ -96,7 +96,6 @@ async function init() {
   const setNm = (m, animate = true) => { nm = m; house.setNightMode(m, animate); const x = NM.find(z => z[0] === m); nmBtn.innerHTML = `${I(x[1])}<span>${x[2]}</span>`; try { localStorage.setItem('nightMode', m); } catch (_) {} };
   nmBtn.title = 'Automático segue o nascer e o pôr do sol';
   nmBtn.onclick = () => setNm(NM[(NM.findIndex(z => z[0] === nm) + 1) % NM.length][0]);
-  $('.scene-tools').prepend(nmBtn);
   // formas de ver as paredes: corte automático (casa de bonecas), meia altura, baixas ou inteiras
   const WM = [['cut', 'Paredes: corte', 'As paredes viradas para você abaixam sozinhas ao girar'], ['half', 'Paredes: meia altura', 'Todas as paredes na metade da altura'], ['low', 'Paredes: baixas', 'Paredes rentes, para ver a casa inteira'], ['full', 'Paredes: inteiras', 'Paredes na altura completa']];
   let wm = (() => { try { return localStorage.getItem('wallMode') || 'cut'; } catch (_) { return 'cut'; } })();
@@ -113,7 +112,6 @@ async function init() {
   const setWk = on => { wkBtn.innerHTML = `${I(on ? 'close' : 'walk')}<span>${on ? 'Sair do passeio' : 'Passear'}</span>`; wkBtn.classList.toggle('on', on); };
   wkBtn.onclick = () => { if (house.walk) house.exitWalk(); else { closePanel(); house.enterWalk(S.selectedRoom); } sound.tick(); };
   setV2(false);
-  $('.scene-tools').prepend(v2Btn);
   document.addEventListener('viewchange', e => setV2(e.detail.mode2d));
   document.addEventListener('walkchange', e => {
     setWk(e.detail); setV2(false); document.body.classList.toggle('walk-mode', e.detail);
@@ -145,7 +143,42 @@ async function init() {
       try { localStorage.setItem('weatherOverride', wxOverride ?? ''); } catch (_) {} applyWeather(); wxPaint(); pop.remove(); sound.tick(); setTimeout(ambientTick, 1500); };
     setTimeout(() => document.addEventListener('pointerdown', function close(ev) { if (!pop.contains(ev.target) && ev.target !== wxBtn) { pop.remove(); } document.removeEventListener('pointerdown', close); }), 0);
   };
-  sndBtn.before(wxBtn); wxPaint(); document.addEventListener('weatherpaint', wxPaint);
+  wxPaint(); document.addEventListener('weatherpaint', wxPaint);
+  // menu Vista: 3D/planta, hora do dia, paredes, rótulos, clima e passeio, num lugar só
+  const vwBtn = document.createElement('button'); vwBtn.className = 'label-mode vw-btn'; vwBtn.id = 'btn-view'; vwBtn.setAttribute('aria-haspopup', 'menu');
+  const vwPaint = () => { const two = !!house?.mode2d; vwBtn.innerHTML = `${I(two ? 'plan' : 'layers')}<span>${two ? 'Planta 2D' : 'Vista'}</span>${I('chevron', 'vw-ch')}`; vwBtn.classList.toggle('on', two); vwBtn.title = 'Como ver a casa: 3D ou planta, dia ou noite, paredes, rótulos e clima'; };
+  const segH = (key, opts, cur) => `<div class="seg vw-seg" data-vw="${key}">${opts.map(([v, n]) => `<button data-v="${v}" class="${v === cur ? 'on' : ''}">${n}</button>`).join('')}</div>`;
+  const vwOpen = () => {
+    const old = $('.vw-pop'); if (old) { old.remove(); vwBtn.setAttribute('aria-expanded', 'false'); return; }
+    const pop = document.createElement('div'); pop.className = 'vw-pop'; pop.setAttribute('role', 'menu');
+    const draw = () => {
+      pop.innerHTML = `<div class="vw-sec"><div class="vw-h">Modo</div>${segH('mode', [['3d', '3D'], ['2d', 'Planta 2D']], house.mode2d ? '2d' : '3d')}</div>
+        <div class="vw-sec"><div class="vw-h">Hora do dia</div>${segH('night', [['auto', 'Automático'], ['day', 'Dia'], ['night', 'Noite']], nm)}</div>
+        <div class="vw-sec"><div class="vw-h">Paredes</div>${segH('walls', [['cut', 'Corte'], ['half', 'Meia'], ['low', 'Baixas'], ['full', 'Inteiras']], wm)}</div>
+        <div class="vw-sec"><div class="vw-h">Rótulos no mapa</div>${segH('labels', [['min', 'Mínimo'], ['full', 'Todos'], ['none', 'Só ícones']], lm)}</div>
+        <div class="vw-sec"><div class="vw-h">Clima na casa</div><div class="vw-wx">${WX.map(([c, n, ic]) => `<button data-wx="${c ?? ''}" class="${c === wxOverride ? 'on' : ''}" title="${n}">${I(ic)}<span>${n}</span></button>`).join('')}</div>
+          ${S.settings?.weatherFx === false ? `<p class="wx-note">O clima no 3D está desligado em Ajustes → Aparência.</p>` : ''}</div>
+        <button class="vw-walk" data-vwalk>${I('walk')}<span>Passear pela casa</span><small>primeira pessoa</small></button>`;
+    };
+    draw();
+    const r = vwBtn.getBoundingClientRect(), host = $('#view-home').getBoundingClientRect();
+    pop.style.top = (r.bottom - host.top + 8) + 'px'; pop.style.right = Math.max(12, host.right - r.right) + 'px';
+    $('#view-home').append(pop); vwBtn.setAttribute('aria-expanded', 'true');
+    pop.onclick = ev => {
+      const w = ev.target.closest('[data-wx]');
+      if (w) { wxOverride = w.dataset.wx === '' ? null : +w.dataset.wx; try { localStorage.setItem('weatherOverride', wxOverride ?? ''); } catch (_) {} applyWeather(); wxPaint(); setTimeout(ambientTick, 1500); sound.tick(); return draw(); }
+      if (ev.target.closest('[data-vwalk]')) { pop.remove(); closePanel(); house.enterWalk(S.selectedRoom); sound.tick(); return; }
+      const b = ev.target.closest('[data-v]'), seg = b?.closest('[data-vw]'); if (!b || !seg) return;
+      const v = b.dataset.v, k = seg.dataset.vw;
+      if (k === 'mode') { if ((v === '2d') !== !!house.mode2d) house.set2D(v === '2d'); }
+      else if (k === 'night') setNm(v); else if (k === 'walls') setWm(v); else if (k === 'labels') setLm(v);
+      sound.tick(); draw();
+    };
+    setTimeout(() => document.addEventListener('pointerdown', function close(ev) { if (!pop.contains(ev.target) && !vwBtn.contains(ev.target)) { pop.remove(); vwBtn.setAttribute('aria-expanded', 'false'); document.removeEventListener('pointerdown', close); } }), 0);
+  };
+  vwBtn.onclick = e => { e.stopPropagation(); vwOpen(); };
+  $('.scene-tools').prepend(vwBtn); setTimeout(vwPaint);
+  document.addEventListener('viewchange', vwPaint);
   const ambientOn = () => S.settings?.sound !== false && !ambMute && S.view === 'home' && !document.hidden;
   document.addEventListener('thunder', () => { if (ambientOn()) sound.thunder(0.4 + Math.random() * 1.2); });
   // chuva baixinha quando estiver chovendo; pássaros de dia e grilos à noite, com a tela Casa aberta
@@ -2034,6 +2067,10 @@ function renderSettings() {
         <span style="display:flex;gap:6px"><input type="number" step="0.01" data-k="location.lat" value="${s.location?.lat ?? -23.55}" style="width:90px" title="Latitude"><input type="number" step="0.01" data-k="location.lng" value="${s.location?.lng ?? -46.63}" style="width:90px" title="Longitude"></span></div>
       <div class="row"><span class="lbl">Tarifa de energia (R$/kWh)</span><input type="number" step="0.01" min="0" data-k="tariff" value="${s.tariff ?? 0.85}" style="width:80px"></div>
     </div>
+    <div class="card set-card" data-sec="geral"><h3>Backup da casa</h3>
+      <p class="d">Guarda num arquivo a planta, os aparelhos no mapa, nomes das teclas, cenas, regras, horários, teclas ligadas e potências. Senhas e chaves das contas <b>não</b> vão no arquivo. Use para trocar de computador ou montar um servidor ligado 24 horas.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-bk-export>${I('check')}Exportar backup</button><button class="btn" data-bk-import>${I('plus')}Restaurar de um arquivo</button></div>
+    </div>
     <div class="card set-card" data-sec="aparencia"><h3>Aparência e 3D</h3>
       <div class="row"><span class="lbl">Aparência</span><div class="seg" data-theme-seg style="margin:0;width:230px">${[['system', 'Automática'], ['light', 'Clara'], ['dark', 'Escura']].map(([v, l]) => `<button data-v="${v}" class="${getTheme() === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>
       <div class="row"><span class="lbl">Tamanho do texto <span style="color:var(--tx2);font-size:12.5px">(Ctrl + e Ctrl −)</span></span><div class="seg" data-zoom style="margin:0;width:300px">${[[0.9, 'Menor'], [1, 'Padrão'], [1.12, 'Grande'], [1.25, 'Maior']].map(([v, l]) => `<button data-v="${v}" class="${(+(localStorage.getItem('textZoom') || 1)) === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>
@@ -2079,6 +2116,15 @@ function renderSettings() {
   const setK = (k, v) => { const p = k.split('.'); let o = s; while (p.length > 1) { const key = p.shift(); o = o[key] || (o[key] = {}); } o[p[0]] = v; };
   for (const t of el.querySelectorAll('.toggle[data-k]')) t.onclick = () => { t.classList.toggle('on'); setK(t.dataset.k, t.classList.contains('on')); };
   for (const i of el.querySelectorAll('input[data-k],select[data-k]')) i.oninput = () => setK(i.dataset.k, i.type === 'number' ? +i.value : i.dataset.k === 'lg.country' ? i.value.toUpperCase() : i.value.trim());
+  if ($('[data-bk-export]', el)) $('[data-bk-export]', el).onclick = async () => { try { const r = await api.backupExport(); if (r) toast('Backup salvo'); } catch (e) { toast(cleanErr(e), 'error'); } };
+  if ($('[data-bk-import]', el)) $('[data-bk-import]', el).onclick = async () => {
+    try {
+      const r = await api.backupImport(); if (!r) return;
+      Object.assign(S, r.all); applyHouseOptions(); house._framed = false; house.setLayout(S.layout, S.placements, S.devices);
+      if (editor) editor.load(S.layout, S.placements, S.devices);
+      renderAll(); toast(`Backup restaurado (${r.date ? new Date(r.date).toLocaleDateString('pt-BR') : 'arquivo'})`);
+    } catch (e) { toast(cleanErr(e), 'error'); }
+  };
   $('[data-save-settings]', el).onclick = async () => {
     toast('Conectando…');
     const all = await api.saveSettings(s);

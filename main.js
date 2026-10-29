@@ -5,6 +5,7 @@ app.setPath('userData', require('path').join(app.getPath('appData'), 'Casa 3D'))
 // padrão brasileiro em todo o app: horas em 24 h e vírgula nos números, independente do idioma do Windows
 app.commandLine.appendSwitch('lang', 'pt-BR');
 const path = require('path');
+const fs = require('fs');
 const { Store } = require('./src/store');
 const { Hub } = require('./src/hub');
 const { EWeLinkCloud } = require('./src/ewelink');
@@ -223,6 +224,27 @@ app.whenReady().then(async () => {
     if (key === 'scenes') rebuildTray();
     hub._emit();
     return all();
+  });
+  // backup da casa (sem senhas): exportar para um arquivo e restaurar de um arquivo
+  ipcMain.handle('backup-export', async () => {
+    const { dialog } = require('electron'), { makeBackup } = require('./src/backup');
+    const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const r = await dialog.showSaveDialog(win, { title: 'Salvar backup da casa', defaultPath: path.join(app.getPath('documents'), `SmartHouse-backup-${stamp}.json`), filters: [{ name: 'Backup do SmartHouse', extensions: ['json'] }] });
+    if (r.canceled || !r.filePath) return false;
+    fs.writeFileSync(r.filePath, JSON.stringify(makeBackup(store, app.getVersion()), null, 1));
+    return true;
+  });
+  ipcMain.handle('backup-import', async () => {
+    const { dialog } = require('electron'), { applyBackup } = require('./src/backup');
+    const r = await dialog.showOpenDialog(win, { title: 'Restaurar backup da casa', properties: ['openFile'], filters: [{ name: 'Backup do SmartHouse', extensions: ['json'] }] });
+    if (r.canceled || !r.filePaths?.[0]) return null;
+    let obj; try { obj = JSON.parse(fs.readFileSync(r.filePaths[0], 'utf8')); } catch (_) { throw new Error('Não consegui ler o arquivo. Ele é um backup do SmartHouse?'); }
+    const c = await dialog.showMessageBox(win, { type: 'question', buttons: ['Restaurar', 'Cancelar'], defaultId: 1, cancelId: 1, title: 'Restaurar backup', message: 'Substituir a casa atual pelo backup?', detail: 'Planta, aparelhos no mapa, cenas, regras, horários e nomes serão trocados pelos do arquivo. As contas conectadas continuam como estão.' });
+    if (c.response !== 0) return null;
+    applyBackup(store, obj);
+    await hub.start();
+    rebuildTray?.();
+    return { all: all(), date: obj.date };
   });
   ipcMain.handle('rename', (_, id, name) => {
     const a = store.get('aliases'); a[id] = name; store.set('aliases', a); hub._emit(); return true;

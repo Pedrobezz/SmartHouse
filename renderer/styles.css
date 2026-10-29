@@ -1442,3 +1442,25 @@ select option:disabled { color: rgba(235, 235, 245, .4); }
 .pc-part small { color: var(--tx3); font-size: 11.5px; margin-top: 2px; }
 .pc-part b { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .panel [data-pc24], .panel [data-pcinfo] { display: block !important; }
+
+/* menu Vista (substitui os vários botões do topo da tela Casa) */
+.vw-btn .vw-ch { width: 12px !important; height: 12px !important; color: var(--tx2) !important; margin-left: -2px; }
+.vw-btn.on .vw-ch { color: #fff !important; }
+.vw-pop { position: absolute; z-index: 30; width: 340px; max-width: calc(100% - 24px); max-height: calc(100% - 80px); overflow-y: auto; padding: 14px; border-radius: 18px;
+  background: var(--mat-strong, var(--mat)); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+  box-shadow: var(--ring), 0 18px 44px rgba(0, 0, 0, .3); animation: wxIn .16s var(--ease); display: flex; flex-direction: column; gap: 14px; }
+.vw-h { font-size: 11.5px; font-weight: 600; color: var(--tx2); margin: 0 0 6px 2px; letter-spacing: .01em; }
+.vw-seg { margin: 0 !important; width: 100%; }
+.vw-seg button { font-size: 12.5px; }
+.vw-wx { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.vw-wx button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px 7px; border: 0; border-radius: 12px; background: var(--fill, rgba(127, 127, 127, .12)); color: var(--tx); font-size: 11px; cursor: pointer; transition: background .15s, transform .12s var(--ease); }
+.vw-wx button .ic { width: 18px; height: 18px; color: var(--tx2); }
+.vw-wx button:hover { background: var(--fill2, rgba(127, 127, 127, .2)); }
+.vw-wx button:active { transform: scale(.95); }
+.vw-wx button.on { background: var(--accent); color: #fff; }
+.vw-wx button.on .ic { color: #fff; }
+.vw-walk { display: flex; align-items: center; gap: 10px; width: 100%; height: 42px; padding: 0 12px; border: 0; border-radius: 12px; background: var(--fill, rgba(127, 127, 127, .12)); color: var(--tx); font-size: 13.5px; cursor: pointer; text-align: left; }
+.vw-walk .ic { width: 18px; height: 18px; color: var(--accent); }
+.vw-walk span { flex: 1; }
+.vw-walk small { color: var(--tx3); font-size: 11.5px; }
+.vw-walk:hover { background: var(--fill2, rgba(127, 127, 127, .2)); }

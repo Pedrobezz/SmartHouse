@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld('api', {
   deviceProfile: id => ipcRenderer.invoke('device-profile', id),
   getEnergy: id => ipcRenderer.invoke('get-energy', id),
   save: (key, value) => ipcRenderer.invoke('save', key, value),
+  backupExport: () => ipcRenderer.invoke('backup-export'),
+  backupImport: () => ipcRenderer.invoke('backup-import'),
   rename: (id, name) => ipcRenderer.invoke('rename', id, name),
   saveSettings: s => ipcRenderer.invoke('save-settings', s),
   tuyaScan: () => ipcRenderer.invoke('tuya-scan'),
