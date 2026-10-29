@@ -20,4 +20,11 @@ Claude-Session: https://claude.ai/code/session_01WQQhsfPuVF5Fifemc3v6SJ"
 git branch -D updates -q 2>/dev/null || true
 git branch -m updates
 git push -f origin updates 2>&1 | tail -1
+# código-fonte no ramo main (repositório: Pedrobezz/smarthouse)
+cd ../casa-app
+git add -A && (git -c user.name="Claude" -c user.email="noreply@anthropic.com" commit -qm "SmartHouse $V
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01WQQhsfPuVF5Fifemc3v6SJ" || true)
+git push -q origin main 2>&1 | tail -1 || true
 echo "Publicado $V"
